@@ -1,0 +1,4 @@
+.vscode/
+states/
+*.old
+*.out
