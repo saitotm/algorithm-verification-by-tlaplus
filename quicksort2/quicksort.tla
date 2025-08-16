@@ -34,6 +34,10 @@ begin
 
         PartitionLoop:
             while j <= right do
+                \* loop invariants
+                assert \A idx \in left..i-1: array[idx] < pivot;
+                assert \A idx \in i..j-1: array[idx] >= pivot;
+
                 if array[j] < pivot then
                     with tmp = array[j] do
                         array[j] := array[i] ||
@@ -77,7 +81,7 @@ begin
 end process;
 
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "7c28162a" /\ chksum(tla) = "26132d9")
+\* BEGIN TRANSLATION (chksum(pcal) = "7c28162a" /\ chksum(tla) = "a8a68261")
 \* Parameter left of procedure partition2 at line 24 col 22 changed to left_
 \* Parameter right of procedure partition2 at line 24 col 28 changed to right_
 CONSTANT defaultInitValue
@@ -114,7 +118,11 @@ Partition(self) == /\ pc[self] = "Partition"
 
 PartitionLoop(self) == /\ pc[self] = "PartitionLoop"
                        /\ IF j[self] <= right_[self]
-                             THEN /\ IF array[j[self]] < pivot[self]
+                             THEN /\ Assert(\A idx \in left_[self]..i[self]-1: array[idx] < pivot[self], 
+                                            "Failure of assertion at line 37, column 17.")
+                                  /\ Assert(\A idx \in i[self]..j[self]-1: array[idx] >= pivot[self], 
+                                            "Failure of assertion at line 38, column 17.")
+                                  /\ IF array[j[self]] < pivot[self]
                                         THEN /\ LET tmp == array[j[self]] IN
                                                   array' = [array EXCEPT ![j[self]] = array[i[self]],
                                                                          ![i[self]] = tmp]
@@ -185,7 +193,7 @@ SortRight(self) == /\ pc[self] = "SortRight"
 
 CheckSubArraySorted(self) == /\ pc[self] = "CheckSubArraySorted"
                              /\ Assert(Sorted(SubSeq(array, left[self], right[self])), 
-                                       "Failure of assertion at line 67, column 9.")
+                                       "Failure of assertion at line 70, column 9.")
                              /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
                              /\ left' = [left EXCEPT ![self] = Head(stack[self]).left]
                              /\ right' = [right EXCEPT ![self] = Head(stack[self]).right]
@@ -209,7 +217,7 @@ Main == /\ pc["main"] = "Main"
 
 CheckSorted == /\ pc["main"] = "CheckSorted"
                /\ Assert(Sorted(array), 
-                         "Failure of assertion at line 76, column 9.")
+                         "Failure of assertion at line 79, column 9.")
                /\ pc' = [pc EXCEPT !["main"] = "Done"]
                /\ UNCHANGED << array, mid, stack, left_, right_, pivot, i, j, 
                                left, right >>
