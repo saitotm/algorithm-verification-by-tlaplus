@@ -21,6 +21,13 @@ variables
     array \in PossibleInputs,
     mid;
 
+macro swap(i, j) begin
+    with tmp = array[j] do
+        array[j] := array[i] ||
+        array[i] := tmp
+    end with;
+end macro;
+
 procedure partition2(left, right)
 variables
     pivot, i, j;
@@ -39,20 +46,13 @@ begin
                 assert \A idx \in i..j-1: array[idx] >= pivot;
 
                 if array[j] < pivot then
-                    with tmp = array[j] do
-                        array[j] := array[i] ||
-                        array[i] := tmp
-                    end with;
+                    swap(i, j);
                     i := i + 1;
                 end if;
                 j := j + 1;
             end while;
 
-            with tmp = array[i] do
-                array[i] := array[right] ||
-                array[right] := tmp;
-            end with;
-
+            swap(i, right);
             mid := i;
             return;
 end procedure;
@@ -81,9 +81,9 @@ begin
 end process;
 
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "7c28162a" /\ chksum(tla) = "a8a68261")
-\* Parameter left of procedure partition2 at line 24 col 22 changed to left_
-\* Parameter right of procedure partition2 at line 24 col 28 changed to right_
+\* BEGIN TRANSLATION (chksum(pcal) = "7c28162a" /\ chksum(tla) = "ceca2b47")
+\* Parameter left of procedure partition2 at line 31 col 22 changed to left_
+\* Parameter right of procedure partition2 at line 31 col 28 changed to right_
 CONSTANT defaultInitValue
 VARIABLES pc, array, mid, stack, left_, right_, pivot, i, j, left, right
 
@@ -108,7 +108,7 @@ Init == (* Global variables *)
 
 Partition(self) == /\ pc[self] = "Partition"
                    /\ Assert(left_[self] < right_[self], 
-                             "Failure of assertion at line 29, column 9.")
+                             "Failure of assertion at line 36, column 9.")
                    /\ pivot' = [pivot EXCEPT ![self] = array[right_[self]]]
                    /\ i' = [i EXCEPT ![self] = left_[self]]
                    /\ j' = [j EXCEPT ![self] = left_[self]]
@@ -119,9 +119,9 @@ Partition(self) == /\ pc[self] = "Partition"
 PartitionLoop(self) == /\ pc[self] = "PartitionLoop"
                        /\ IF j[self] <= right_[self]
                              THEN /\ Assert(\A idx \in left_[self]..i[self]-1: array[idx] < pivot[self], 
-                                            "Failure of assertion at line 37, column 17.")
+                                            "Failure of assertion at line 45, column 17.")
                                   /\ Assert(\A idx \in i[self]..j[self]-1: array[idx] >= pivot[self], 
-                                            "Failure of assertion at line 38, column 17.")
+                                            "Failure of assertion at line 46, column 17.")
                                   /\ IF array[j[self]] < pivot[self]
                                         THEN /\ LET tmp == array[j[self]] IN
                                                   array' = [array EXCEPT ![j[self]] = array[i[self]],
@@ -133,9 +133,9 @@ PartitionLoop(self) == /\ pc[self] = "PartitionLoop"
                                   /\ pc' = [pc EXCEPT ![self] = "PartitionLoop"]
                                   /\ UNCHANGED << mid, stack, left_, right_, 
                                                   pivot >>
-                             ELSE /\ LET tmp == array[i[self]] IN
-                                       array' = [array EXCEPT ![i[self]] = array[right_[self]],
-                                                              ![right_[self]] = tmp]
+                             ELSE /\ LET tmp == array[right_[self]] IN
+                                       array' = [array EXCEPT ![right_[self]] = array[i[self]],
+                                                              ![i[self]] = tmp]
                                   /\ mid' = i[self]
                                   /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
                                   /\ pivot' = [pivot EXCEPT ![self] = Head(stack[self]).pivot]
@@ -193,7 +193,7 @@ SortRight(self) == /\ pc[self] = "SortRight"
 
 CheckSubArraySorted(self) == /\ pc[self] = "CheckSubArraySorted"
                              /\ Assert(Sorted(SubSeq(array, left[self], right[self])), 
-                                       "Failure of assertion at line 70, column 9.")
+                                       "Failure of assertion at line 71, column 9.")
                              /\ pc' = [pc EXCEPT ![self] = Head(stack[self]).pc]
                              /\ left' = [left EXCEPT ![self] = Head(stack[self]).left]
                              /\ right' = [right EXCEPT ![self] = Head(stack[self]).right]
@@ -217,7 +217,7 @@ Main == /\ pc["main"] = "Main"
 
 CheckSorted == /\ pc["main"] = "CheckSorted"
                /\ Assert(Sorted(array), 
-                         "Failure of assertion at line 79, column 9.")
+                         "Failure of assertion at line 80, column 9.")
                /\ pc' = [pc EXCEPT !["main"] = "Done"]
                /\ UNCHANGED << array, mid, stack, left_, right_, pivot, i, j, 
                                left, right >>
